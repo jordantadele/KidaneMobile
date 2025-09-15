@@ -1734,6 +1734,8 @@
     let allProducts = [];
     let currentFilter = 'all';
 
+
+
     // Mobile Sidebar Toggle
     menuBtn.addEventListener('click', () => {
       mobileSidebar.classList.toggle('active');
@@ -1780,11 +1782,10 @@
         const { data: products, error } = await supabase
           .from('products')
           .select(`
-            *,
-            categories (name)
-          `)
+    *,
+    categories (name, slug)
+  `)
           .order('created_at', { ascending: false });
-
         if (error) {
           console.error('Supabase error:', error);
           throw new Error('Failed to fetch products from database');
@@ -1823,7 +1824,7 @@
       products.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
-        productCard.setAttribute('data-category', product.categories ? product.categories.name : 'uncategorized');
+        productCard.setAttribute('data-category', product.categories ? product.categories.slug : 'uncategorized');
         productCard.setAttribute('data-id', product.id);
 
         // Create short specs text
@@ -1907,18 +1908,10 @@
     }
 
     // Set up category filtering
+    // Set up category filtering
     function setupCategoryFiltering(products) {
-      // Extract unique categories from products
-      const categories = [...new Set(products.map(product =>
-        product.categories ? product.categories.name : 'uncategorized'
-      ))];
-
-      // Update category tabs if needed
+      // Add click event listeners to category tabs
       categoryTabs.forEach(tab => {
-        const category = tab.getAttribute('data-category');
-        tab.style.display = 'block'; // always show tabs
-
-
         tab.addEventListener('click', () => {
           // Remove active class from all tabs
           categoryTabs.forEach(t => t.classList.remove('active'));
@@ -1929,16 +1922,23 @@
           currentFilter = category;
 
           // Filter products
-          const productCards = document.querySelectorAll('.product-card');
-
-          productCards.forEach(card => {
-            if (category === 'all' || card.getAttribute('data-category') === category) {
-              card.style.display = 'block';
-            } else {
-              card.style.display = 'none';
-            }
-          });
+          filterProductsByCategory(category);
         });
+      });
+    }
+
+    // Filter products by category
+    function filterProductsByCategory(category) {
+      const productCards = document.querySelectorAll('.product-card');
+
+      productCards.forEach(card => {
+        const productCategory = card.getAttribute('data-category');
+
+        if (category === 'all' || productCategory === category) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
       });
     }
 
@@ -2197,6 +2197,9 @@
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return re.test(email);
     }
+
+
+
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
